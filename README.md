@@ -40,19 +40,57 @@
 - 然后回到Cloudflare，点完成并开始使用
 
 ### 3. 建立Tunnel
-- 返回首页，点击Access，启动Zero Trust![](./img/Cloudflare_4.png)
-- 点击Access下的Tunnels，点Create a tunnel![](./img/Cloudflare_5.png)
+- 返回首页，点击`Access`，启动`Zero Trust`![](./img/Cloudflare_4.png)
+- 点击`Access`下的`Tunnels`，点`Create a tunnel`![](./img/Cloudflare_5.png)
 - 首次使用会弹出付费方案的设置，选择Free，点Select plan，选择0元购买，并设置支付方式（信用卡），保存即可
 - 回到Create a tunnel，输入喜欢的名称，如yixiaofengchen
 - 设置该tunnel的Configure，选择environment为Docker，并复制下面那串代码（Token）并保存![](./img/Cloudflare_6.png)
 - 继续设置Public Hostname，Subdomain填openai，domain填刚刚注册的域名；设置Service，Type选择HTTP，URL填写自己NAS的IP及想要映射的端口（如192.168.1.101:9010），然后点Save hostname![](./img/Cloudflare_7.png)
 
 ## 二、搭建OpenAI的API中转代理
-OpenAI及其API在大陆境内是被墙状态，目前在境内使用它们一般是科学上网或中转或[反向代理](https://github.com/youminxue/chatgpt_plus_proxy_website)。ChatGPT Academic本身默认使用的是OpenAI原生API链接，但这不妨碍我们对此略作修改，使其走中转代理。本教程参考的教程是x-dr的[《chatgptProxyAPI》](https://github.com/x-dr/chatgptProxyAPI)，主要是[《利用Cloudflare Worker中转api.openai.com》](https://github.com/x-dr/chatgptProxyAPI/blob/main/docs/cloudflare_workers.md)。但是，由于cloudflare的workers.dev被墙或被污染，如果不使用自己的域名，那么可以尝试[使用cloudflare的Pages进行中转](https://github.com/x-dr/chatgptProxyAPI/blob/main/docs/cloudflare_proxy_pages.md)（未测试）。
+> OpenAI及其API在大陆境内是被墙状态，目前在境内使用它们一般是科学上网或中转或[反向代理](https://github.com/youminxue/chatgpt_plus_proxy_website)。ChatGPT Academic本身默认使用的是OpenAI原生API链接，但这不妨碍我们对此略作修改，使其走中转代理。本教程参考的教程是x-dr的[《chatgptProxyAPI》](https://github.com/x-dr/chatgptProxyAPI)，主要是[《利用Cloudflare Worker中转api.openai.com》](https://github.com/x-dr/chatgptProxyAPI/blob/main/docs/cloudflare_workers.md)。但是，由于cloudflare的workers.dev被墙或被污染，如果不使用自己的域名，那么可以尝试[使用cloudflare的Pages进行中转](https://github.com/x-dr/chatgptProxyAPI/blob/main/docs/cloudflare_proxy_pages.md)（未测试）。
 
-这里建议在```Tiggers->Add Coustom Domain->Domain```设置二级域名，如```openai.mydomain.website```，这里一级域名```mydomain.website```可以不浪费，用于其他用途。这时，就可以用自己的域名``` https://openai.mydomain.website/v1/chat/completions```代替官方的```https://api.openai.com/v1/chat/completions ```。根据[x-dr的教程](https://github.com/x-dr/chatgptProxyAPI/blob/main/docs/cloudflare_workers.md)介绍可可知：**由于 Cloudflare 有每天免费 10 万次的请求额度，所以轻度使用基本是零成本的**。
+### 1. 创建一个Cloudflare Worker
+- 登录到 Cloudflare 的管理界面后，点击侧边栏的`Workers`选项，然后点击`Create a Service`创建一个 Worker ![](./img/Cloudflare_worker_1.png)
+- 然后在创建界面中输入`Service name`后点击`Create Service`按钮 ![](./img/Cloudflare_worker_2.png)
+- 在 Worker 的管理界面，点击右上角的 “Quick Edit” 按钮编辑代码 Worker 的代码 ![](./img/Cloudflare_worker_3.png)
+- 在左侧的代码编辑器中，删除现有的所有代码，然后复制粘贴以下内容到代码编辑器:
 
-以上步骤完成之后，可以在浏览器输入自己的域名测试一下中转API是否生效，当出现以下页面提示之后，即这一步教程就大功告成：
+```
+const TELEGRAPH_URL = 'https://api.openai.com';
+
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  const url = new URL(request.url);
+  const headers_Origin = request.headers.get("Access-Control-Allow-Origin") || "*"
+  url.host = TELEGRAPH_URL.replace(/^https?:\/\//, '');
+  const modifiedRequest = new Request(url.toString(), {
+    headers: request.headers,
+    method: request.method,
+    body: request.body,
+    redirect: 'follow'
+  });
+  const response = await fetch(modifiedRequest);
+  const modifiedResponse = new Response(response.body, response);
+  // 添加允许跨域访问的响应头
+  modifiedResponse.headers.set('Access-Control-Allow-Origin', headers_Origin);
+  return modifiedResponse;
+}
+```
+- 后点击`Save and deploy`，确认部署 ![](./img/Cloudflare_worker_4.png)
+
+### 2. 绑定域名
+> 这里建议在```Tiggers->Add Coustom Domain->Domain```设置二级域名，如```openai.mydomain.website```，这里一级域名```mydomain.website```可以不浪费，用于其他用途。这时，就可以用自己的域名``` https://openai.mydomain.website/v1/chat/completions```代替官方的```https://api.openai.com/v1/chat/completions ```。根据[x-dr的教程](https://github.com/x-dr/chatgptProxyAPI/blob/main/docs/cloudflare_workers.md)介绍可可知：**由于 Cloudflare 有每天免费 10 万次的请求额度，所以轻度使用基本是零成本的**。
+
+- 在`Cloudflare Workers`的管理界面中，点击`Triggers`选项卡，然后点击`Custom Domians`中的`Add Custom Domain`按钮以绑定域名 ![](./img/Cloudflare_worker_5.png)
+- 输入域名后点击`Add Custom Domain`(目前只支持 NS 托管在 Cloudflare 上的域名，如果不介意，可以点击 Cloudflare 侧边栏的 “Websites”，然后点击 “Add a Site” 按钮，根据提示将域名的 NS 记录指定到 Cloudflare。) ![](./img/Cloudflare_worker_6.png)
+- 注意`DNS`下的`Records`是否被使用 ![](./img/Cloudflare_worker_7.png)
+
+> 以上步骤完成之后，可以在浏览器输入自己的域名``` https://openai.mydomain.website/v1/chat/completions```测试一下中转API是否生效，当出现以下页面提示之后，即这一步教程就大功告成：
+
 ``` json
 {
     "error": {
