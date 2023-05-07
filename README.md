@@ -1,5 +1,9 @@
 # GPT 学术优化 (ChatGPT Academic) 免翻墙教程
-ChatGPT无疑是提高生产力的重要工具，也可以是科研的好帮手，但是它最大的不便之处包括但不限于以下两点：
+
+
+> 本文是针对[elphen-wang/chatgpt_walfree](https://github.com/elphen-wang/chatgpt_wallfree)的具体实践操作
+
+> ChatGPT无疑是提高生产力的重要工具，也可以是科研的好帮手，但是它最大的不便之处包括但不限于以下两点：
 （1）**<font color=red>不免费</font>**。即便付费，缴费也有一定的门槛，而且价格不便宜。
 （2）**<font color=red>需要科学上网</font>**。即通俗说法中的“翻墙”。虽然，搞科研的人使用科学上网并不罕见，但是部署到境内个人设备，总归有被检测到的风险。
 <font color=blue>本教程旨在缓解或解决以上两点痛点需求，适合个人和课题组生产环境。</font>
@@ -7,17 +11,24 @@ ChatGPT无疑是提高生产力的重要工具，也可以是科研的好帮手�
 **本教程参考了以下高手（大佬）的智慧成果，在此先respect和鸣谢！如果喜欢他们项目和本教程，请不吝分别给一个Star，谢谢！**
 + [binary-husky的《gpt_academic》](https://github.com/binary-husky/gpt_academic), 本教程就是解决就是它需翻墙的问题。
 + [x-dr的《chatgptProxyAPI》](https://github.com/x-dr/chatgptProxyAPI)，用于搭建OpenAI的API中转代理，免翻墙的关键一步。
-+ [坚叔Evan的《群晖/极空间无公网IP搭建Cloudflare-阿里云免费隧道穿透教程》](https://zhuanlan.zhihu.com/p/508569148)，用于绑定自申请的（阿里云）域名到cloudflare和在自己私有云部署ChatGPT Academic。
++ [坚叔Evan的《极空间无公网IP搭建Cloudflared免费隧道内网穿透，部署docker教程》](https://post.smzdm.com/p/ao9vdw8n/)，用于绑定自申请的（阿里云）域名到cloudflare和在自己私有云部署ChatGPT Academic。
 + [六岁小少年的《2023年稳定可用的谷歌镜像站无需翻墙》](https://www.jkxuexi.com/resources/99.html)，用于替换ChatGPT Academic联网功能使用谷歌搜索。
 
 以下各环节中具体操作步骤，可参见其中的链接，本教程就不搬运赘述，从而减少了ta们成果的热度。
 
 ## 一、在阿里云上购买域名并绑定到Cloudflare (非必须)
-详细的操作步骤可参见**坚叔Evan**的[《群晖/极空间无公网IP搭建Cloudflare-阿里云免费隧道穿透教程》](https://zhuanlan.zhihu.com/p/508569148)，本人已经走过一遍，无问题。不过，值得注意的是，他教程的初心是内网穿透个人私有云的docker。它可把局域网内的内网转发到外网上，免去一般需公网ip的制约。
+> 详细的操作步骤可参见**坚叔Evan**的[坚叔Evan的《极空间无公网IP搭建Cloudflared免费隧道内网穿透，部署docker教程》](https://post.smzdm.com/p/ao9vdw8n/)，本人已经走过一遍，无问题。不过，值得注意的是，他教程的初心是内网穿透个人私有云的docker。它可把局域网内的内网转发到外网上，免去一般需公网ip的制约。
 
-购买域名时，建议购买首年8元、10年188元的套餐，比较划算。毕竟，续约比较贵。
+> 购买域名时，建议购买首年8元、10年188元的套餐，比较划算。毕竟，续约比较贵。
 
-但这一步并不是必须的，也不是必须在阿里云上购买域名。因为，本教程下一步中将说明，使用cloudflare自带域名亦可实现公网访问。
+> 但这一步并不是必须的，也不是必须在阿里云上购买域名。因为，本教程下一步中将说明，使用cloudflare自带域名亦可实现公网访问。
+
+### 1. 阿里云注册域名
+
+- [阿里云](https://cn.aliyun.com/) → 产品 → 域名与网站Domains
+- 自建域名并查询
+- 购买域名时，建议购买首年8元、10年188元的套餐
+- 按照指引一步一步实名，注意必须完成实名认证
 
 ## 二、搭建OpenAI的API中转代理
 OpenAI及其API在大陆境内是被墙状态，目前在境内使用它们一般是科学上网或中转或[反向代理](https://github.com/youminxue/chatgpt_plus_proxy_website)。ChatGPT Academic本身默认使用的是OpenAI原生API链接，但这不妨碍我们对此略作修改，使其走中转代理。本教程参考的教程是x-dr的[《chatgptProxyAPI》](https://github.com/x-dr/chatgptProxyAPI)，主要是[《利用Cloudflare Worker中转api.openai.com》](https://github.com/x-dr/chatgptProxyAPI/blob/main/docs/cloudflare_workers.md)。但是，由于cloudflare的workers.dev被墙或被污染，如果不使用自己的域名，那么可以尝试[使用cloudflare的Pages进行中转](https://github.com/x-dr/chatgptProxyAPI/blob/main/docs/cloudflare_proxy_pages.md)（未测试）。
