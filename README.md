@@ -25,27 +25,27 @@
 
 ### 1. 阿里云注册域名
 - [阿里云](https://cn.aliyun.com/) → 产品 → 域名与网站Domains
-- 自建域名并查询![img/aliyun_1.png]
+- 自建域名并查询![](./img/aliyun_1.png)
 - 购买域名时，建议购买首年8元、10年188元的套餐
 - 按照指引一步一步实名，注意必须完成实名认证
 
 ### 2. 注册Cloudflare账号
 - 我们登录Cloudflared注册一个账号并登录，官网链接：[Cloudflare](https://www.cloudflare-cn.com/)
-- 站点添加刚才注册的阿里云网站![img/Cloudflare_1.png]
-- 选择Free，继续下一步![img/Cloudflare_2.png]
+- 站点添加刚才注册的阿里云网站![](./img/Cloudflare_1.png)
+- 选择Free，继续下一步![](./img/Cloudflare_2.png)
 - 复制保存好两个Cloudflare名称服务器
-- 设置好后可以进入该站点，服务器可以在DNS设置中找到![img/Cloudflare_3.png]
-- 回到刚才阿里云域名管理，左侧域名列表，点击域名进入![img/aliyun_2.png]
-- 修改dns，把刚才复制的2个Cloudflare填到这里，确定保存![img/aliyun_3.png]
+- 设置好后可以进入该站点，服务器可以在DNS设置中找到![](./img/Cloudflare_3.png)
+- 回到刚才阿里云域名管理，左侧域名列表，点击域名进入![](./img/aliyun_2.png)
+- 修改dns，把刚才复制的2个Cloudflare填到这里，确定保存![](./img/aliyun_3.png)
 - 然后回到Cloudflare，点完成并开始使用
 
 ### 3. 建立Tunnel
-- 返回首页，点击Access，启动Zero Trust![img/Cloudflare_4.png]
-- 点击Access下的Tunnels，点Create a tunnel![img/Cloudflare_5.png]
+- 返回首页，点击Access，启动Zero Trust![](./img/Cloudflare_4.png)
+- 点击Access下的Tunnels，点Create a tunnel![](./img/Cloudflare_5.png)
 - 首次使用会弹出付费方案的设置，选择Free，点Select plan，选择0元购买，并设置支付方式（信用卡），保存即可
 - 回到Create a tunnel，输入喜欢的名称，如yixiaofengchen
-- 设置该tunnel的Configure，选择environment为Docker，并复制下面那串代码（Token）并保存![img/Cloudflare_6.png]
-- 继续设置Public Hostname，Subdomain填openai，domain填刚刚注册的域名；设置Service，Type选择HTTP，URL填写自己NAS的IP及想要映射的端口（如192.168.1.101:9010），然后点Save hostname![img/Cloudflare_7.png]
+- 设置该tunnel的Configure，选择environment为Docker，并复制下面那串代码（Token）并保存![](./img/Cloudflare_6.png)
+- 继续设置Public Hostname，Subdomain填openai，domain填刚刚注册的域名；设置Service，Type选择HTTP，URL填写自己NAS的IP及想要映射的端口（如192.168.1.101:9010），然后点Save hostname![](./img/Cloudflare_7.png)
 
 ## 二、搭建OpenAI的API中转代理
 OpenAI及其API在大陆境内是被墙状态，目前在境内使用它们一般是科学上网或中转或[反向代理](https://github.com/youminxue/chatgpt_plus_proxy_website)。ChatGPT Academic本身默认使用的是OpenAI原生API链接，但这不妨碍我们对此略作修改，使其走中转代理。本教程参考的教程是x-dr的[《chatgptProxyAPI》](https://github.com/x-dr/chatgptProxyAPI)，主要是[《利用Cloudflare Worker中转api.openai.com》](https://github.com/x-dr/chatgptProxyAPI/blob/main/docs/cloudflare_workers.md)。但是，由于cloudflare的workers.dev被墙或被污染，如果不使用自己的域名，那么可以尝试[使用cloudflare的Pages进行中转](https://github.com/x-dr/chatgptProxyAPI/blob/main/docs/cloudflare_proxy_pages.md)（未测试）。
